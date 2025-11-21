@@ -1,0 +1,7 @@
+// This file will load Matter.js for the client and expose it globally for use in client.js
+// You can use this script in your HTML before client.js
+
+// Matter.js CDN (official)
+// <script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
+
+// If you want to use a local copy, download matter.min.js and serve it from /public

@@ -1,0 +1,14 @@
+{
+  "name": "socketio-2d-shooter",
+  "version": "1.0.0",
+  "description": "A server-authoritative top-down 2D shooter using Socket.IO.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "matter-js": "^0.20.0",
+    "socket.io": "^4.7.5"
+  }
+}
