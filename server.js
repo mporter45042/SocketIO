@@ -56,6 +56,8 @@ function serializePlayer(player) {
             weaponType: player.equippedWeapon.weaponType,
             currentAmmo: player.equippedWeapon.currentAmmo,
             projectileCapacity: player.equippedWeapon.projectileCapacity,
+            reserveAmmo: player.equippedWeapon.reserveAmmo,
+            reserveCapacity: player.equippedWeapon.reserveCapacity,
             reloading: player.equippedWeapon.reloading
         } : null
     };

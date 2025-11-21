@@ -301,6 +301,46 @@ function drawPlayers() {
     ctx.restore();
 }
 
+function drawAmmoUI() {
+    if (!localPlayer || !localPlayer.equippedWeapon) return;
+    
+    const weapon = localPlayer.equippedWeapon;
+    ctx.save();
+    ctx.fillStyle = 'white';
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 1;
+    ctx.font = '16px Arial';
+    
+    // Position UI in bottom right corner
+    const x = WORLD_WIDTH - 150;
+    const y = WORLD_HEIGHT - 60;
+    
+    // Current ammo / capacity
+    const ammoText = `${weapon.currentAmmo} / ${weapon.projectileCapacity}`;
+    ctx.strokeText(ammoText, x, y);
+    ctx.fillText(ammoText, x, y);
+    
+    // Reserve ammo
+    const reserveText = `Reserve: ${weapon.reserveAmmo}`;
+    ctx.strokeText(reserveText, x, y + 20);
+    ctx.fillText(reserveText, x, y + 20);
+    
+    // Reload status
+    if (weapon.reloading) {
+        ctx.fillStyle = 'yellow';
+        const reloadText = 'RELOADING...';
+        ctx.strokeText(reloadText, x, y + 40);
+        ctx.fillText(reloadText, x, y + 40);
+    } else if (weapon.currentAmmo === 0) {
+        ctx.fillStyle = 'red';
+        const emptyText = 'PRESS R TO RELOAD';
+        ctx.strokeText(emptyText, x, y + 40);
+        ctx.fillText(emptyText, x, y + 40);
+    }
+    
+    ctx.restore();
+}
+
 
 function applyInputToBody(body, inputObj) {
     let vx = 0, vy = 0;
@@ -354,7 +394,7 @@ function gameLoop() {
     
     ctx.clearRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
     drawPlayers();
-    // TODO: render UI, etc.
+    drawAmmoUI();
     requestAnimationFrame(gameLoop);
 }
 

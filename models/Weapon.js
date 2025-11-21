@@ -5,8 +5,10 @@ class Weapon extends Item {
         super(id, 'weapon', name);
         this.equipable = true;
         this.weaponType = weaponType; // 'pistol', 'rifle', 'shotgun', etc.
-        this.projectileCapacity = 10;
-        this.currentAmmo = 10;
+        this.projectileCapacity = 10; // Maximum ammo in weapon
+        this.currentAmmo = 10; // Current ammo in weapon
+        this.reserveCapacity = 120; // Maximum reserve ammo
+        this.reserveAmmo = 120; // Current reserve ammo (start with full reserves for testing)
         this.projectileType = 'bullet';
         this.reloadTime = 2000; // milliseconds
         this.fireRate = 300; // milliseconds between shots
@@ -14,8 +16,8 @@ class Weapon extends Item {
         this.reloading = false;
         this.reloadStartTime = 0;
         this.damage = 10;
-        this.range = 800;
-        this.projectileSpeed = 800; // Doubled from 400
+        this.range = 1500;
+        this.projectileSpeed = 1200; 
     }
     
     canFire() {
@@ -33,7 +35,11 @@ class Weapon extends Item {
     }
     
     startReload() {
-        if (this.reloading || this.currentAmmo >= this.projectileCapacity) return false;
+        if (this.reloading || 
+            this.currentAmmo >= this.projectileCapacity || 
+            this.reserveAmmo <= 0) {
+            return false;
+        }
         this.reloading = true;
         this.reloadStartTime = Date.now();
         return true;
@@ -43,9 +49,35 @@ class Weapon extends Item {
         if (!this.reloading) return;
         const now = Date.now();
         if (now - this.reloadStartTime >= this.reloadTime) {
-            this.currentAmmo = this.projectileCapacity;
+            // Calculate how much ammo is needed to fill the weapon
+            const ammoNeeded = this.projectileCapacity - this.currentAmmo;
+            // Take from reserves, but only what's available and needed
+            const ammoToTransfer = Math.min(ammoNeeded, this.reserveAmmo);
+            
+            // Transfer ammo from reserves to current ammo
+            this.currentAmmo += ammoToTransfer;
+            this.reserveAmmo -= ammoToTransfer;
+            
             this.reloading = false;
         }
+    }
+    
+    // Add method to check if reload is possible
+    canReload() {
+        return !this.reloading && 
+               this.currentAmmo < this.projectileCapacity && 
+               this.reserveAmmo > 0;
+    }
+    
+    // Add method to get ammo status
+    getAmmoStatus() {
+        return {
+            current: this.currentAmmo,
+            capacity: this.projectileCapacity,
+            reserve: this.reserveAmmo,
+            reserveCapacity: this.reserveCapacity,
+            reloading: this.reloading
+        };
     }
 }
 
