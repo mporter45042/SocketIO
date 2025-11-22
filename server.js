@@ -43,6 +43,7 @@ function serializePlayer(player) {
     return {
         id: player.id,
         name: player.name,
+        skin: player.skin,
         health: player.health,
         maxHealth: player.maxHealth,
         x: player.x,
@@ -228,6 +229,15 @@ io.on('connection', (socket) => {
         const player = players[socket.id];
         if (player && player.equippedWeapon) {
             player.equippedWeapon.startReload();
+        }
+    });
+    
+    socket.on('changeSkin', (skinName) => {
+        const player = players[socket.id];
+        if (player && player.setSkin(skinName)) {
+            // Notify all clients of the updated player
+            const serializablePlayers = Object.values(players).map(serializePlayer);
+            io.emit('playersUpdate', serializablePlayers);
         }
     });
 

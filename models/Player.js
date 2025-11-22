@@ -6,6 +6,9 @@ class Player {
     constructor(id, name, world) {
         this.id = id; // socket.id
         this.name = name || `Player_${id.substring(0, 4)}`;
+        // Randomly assign a starting skin
+        const availableSkins = ['player.png', 'player2.png', 'player3.png'];
+        this.skin = availableSkins[Math.floor(Math.random() * availableSkins.length)];
         this.health = 100;
         this.maxHealth = 100;
         this.x = Math.random() * 700 + 50; // spawn within bounds
@@ -16,7 +19,7 @@ class Player {
         this.damageDealt = 0;
         // Inventory system
         this.inventory = [];
-        this.maxInventorySlots = 20;
+        this.maxInventorySlots = 6;
         this.equippedWeapon = null;
         // Create a Matter.js body for the player
         this.body = Matter.Bodies.circle(this.x, this.y, 32, { frictionAir: 0.18, label: 'player' });
@@ -99,6 +102,16 @@ class Player {
     
     removeBody() {
         Matter.World.remove(require('../physics').world, this.body);
+    }
+    
+    setSkin(skinName) {
+        // Validate skin name to prevent path traversal
+        const validSkins = ['player.png', 'player2.png', 'player3.png'];
+        if (validSkins.includes(skinName)) {
+            this.skin = skinName;
+            return true;
+        }
+        return false;
     }
 }
 

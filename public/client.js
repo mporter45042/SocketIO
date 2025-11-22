@@ -54,6 +54,16 @@ document.addEventListener('keydown', (e) => {
         return;
     }
     
+    // Handle skin change keys (1, 2, 3)
+    if (e.key >= '1' && e.key <= '3') {
+        const skinIndex = parseInt(e.key) - 1;
+        const skinName = availableSkins[skinIndex];
+        if (skinName) {
+            socket.emit('changeSkin', skinName);
+        }
+        return;
+    }
+    
     // Handle movement keys
     const key = e.key.toLowerCase();
     if (keyMap[key] && !input[keyMap[key]]) {
@@ -220,12 +230,23 @@ function drawGrid(playerX, playerY) {
 }
 
 
-// Load player image
-const playerImg = new Image();
-playerImg.src = 'player.png';
+// Player image cache system
+const playerImages = {};
+const availableSkins = ['player.png', 'player2.png', 'player3.png'];
+
+// Load all available skins
+availableSkins.forEach(skin => {
+    const img = new Image();
+    img.src = skin;
+    playerImages[skin] = img;
+});
 
 function isImageLoaded(img) {
-    return img.complete && img.naturalWidth !== 0;
+    return img.complete && img.naturalHeight !== 0;
+}
+
+function getPlayerImage(skinName) {
+    return playerImages[skinName] || playerImages['player.png'];
 }
 
 function drawProjectiles(worldPlayerX, worldPlayerY) {
@@ -261,7 +282,8 @@ function drawProjectiles(worldPlayerX, worldPlayerY) {
 }
 
 function drawPlayers() {
-    if (!isImageLoaded(playerImg)) return; // Wait for image to load
+    // Wait for at least the default image to load
+    if (!isImageLoaded(playerImages['player.png'])) return;
     const size = 64; // 64x64 pixels
     const half = size / 2;
     // Centered player position
@@ -285,20 +307,28 @@ function drawPlayers() {
     }
     // Draw other players
     otherPlayers.forEach(p => {
+        const img = getPlayerImage(p.skin);
+        if (!isImageLoaded(img)) return; // Skip if skin not loaded yet
+        
         ctx.save();
         // Offset other players relative to centered player
         ctx.translate(CENTER_X + (p.x - worldPlayerX), CENTER_Y + (p.y - worldPlayerY));
         // Use the angle provided by the server for each player
         ctx.rotate(p.angle || 0);
-        ctx.drawImage(playerImg, -half, -half, size, size);
+        ctx.drawImage(img, -half, -half, size, size);
         ctx.restore();
     });
     // Draw local player always at center
-    ctx.save();
-    ctx.translate(CENTER_X, CENTER_Y);
-    ctx.rotate(playerAngle);
-    ctx.drawImage(playerImg, -half, -half, size, size);
-    ctx.restore();
+    if (localPlayer) {
+        const img = getPlayerImage(localPlayer.skin);
+        if (isImageLoaded(img)) {
+            ctx.save();
+            ctx.translate(CENTER_X, CENTER_Y);
+            ctx.rotate(playerAngle);
+            ctx.drawImage(img, -half, -half, size, size);
+            ctx.restore();
+        }
+    }
 }
 
 function drawAmmoUI() {
@@ -313,7 +343,7 @@ function drawAmmoUI() {
     
     // Position UI in bottom right corner
     const x = WORLD_WIDTH - 150;
-    const y = WORLD_HEIGHT - 60;
+    const y = WORLD_HEIGHT - 80;
     
     // Current ammo / capacity
     const ammoText = `${weapon.currentAmmo} / ${weapon.projectileCapacity}`;
@@ -337,6 +367,41 @@ function drawAmmoUI() {
         ctx.strokeText(emptyText, x, y + 40);
         ctx.fillText(emptyText, x, y + 40);
     }
+    
+    // Skin info
+    ctx.fillStyle = 'white';
+    ctx.font = '12px Arial';
+    const skinText = `Skin: ${localPlayer.skin}`;
+    ctx.strokeText(skinText, x, y + 60);
+    ctx.fillText(skinText, x, y + 60);
+    
+    ctx.restore();
+}
+
+function drawControls() {
+    ctx.save();
+    ctx.fillStyle = 'white';
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 1;
+    ctx.font = '12px Arial';
+    
+    // Position controls in top left corner
+    const x = 10;
+    let y = 30;
+    
+    const controls = [
+        'WASD: Move',
+        'Mouse: Aim',
+        'Click: Shoot',
+        'R: Reload',
+        '1-3: Change Skin'
+    ];
+    
+    controls.forEach(control => {
+        ctx.strokeText(control, x, y);
+        ctx.fillText(control, x, y);
+        y += 15;
+    });
     
     ctx.restore();
 }
@@ -395,13 +460,14 @@ function gameLoop() {
     ctx.clearRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
     drawPlayers();
     drawAmmoUI();
+    drawControls();
     requestAnimationFrame(gameLoop);
 }
 
-if (isImageLoaded(playerImg)) {
+if (isImageLoaded(playerImages['player.png'])) {
     gameLoop();
 } else {
-    playerImg.onload = () => gameLoop();
+    playerImages['player.png'].onload = () => gameLoop();
 }
 
 // Socket events (stub)
